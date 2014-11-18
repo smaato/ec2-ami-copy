@@ -125,6 +125,8 @@ def main():
                         action='store_true', default=False,
                         help='Specify if you want to have enhanced networking enabled in the ' +
                         'resulting image.')
+    parser.add_argument('-S', '--root-volume-size', dest='root_volume_size', type=int, default=10,
+                        help='The minimum size the root volume should have in the resulting AMI.')
     args = parser.parse_args()
     logging.basicConfig(format='%(asctime)s %(levelname)s: ' \
                                        '%(message)s', level=args.log_level)
@@ -157,10 +159,7 @@ def main():
     # ensure the size of the root volume in the target AMI is at least 10GB,
     # but not smaller than in the origin AMI
     source_snapshot_size = source_image.block_device_mapping[root_device_name].size
-    if source_snapshot_size > 10:
-        target_snapshot_size = source_snapshot_size
-    else:
-        target_snapshot_size = 10
+    target_snapshot_size = max(source_snapshot_size, args.root_volume_size)
 
     block_device_map = build_block_device_map(source_image,
                                               target_snapshot_id,

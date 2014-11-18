@@ -9,10 +9,10 @@ of the root filesystem of the public AMI and creating a AMI with that snapshot
 as root filesystem, by keeping the remaining properties of the original AMI.
 
 It doesn't keep all properties of the original AMI, so the root filesystem size
-is set to 10GB (if it's been lower than that) and the number of attached
-ephemeral volumes is set to four (which is usually more than the original AMI
-had). Both of these properties can be changed of course when creating an
-instance out of the AMI.
+is set to 10GB by default (if it's been lower than that) and the number of
+attached ephemeral volumes is set to four (which is usually more than the
+original AMI had). Both of these properties can be changed of course when
+creating an instance out of the AMI.
 
 The script also allows to enable enhanced networking on the produced AMI. But
 keep in mind that this only works when the operating system of the original AMI
@@ -31,7 +31,7 @@ foo@bar:~$ ./ec2_ami_copy.py -a $access-key -s $secret-key -i $ami-id
 ```
 foo@bar:~$ ./ec2_ami_copy.py --help
 usage: ec2_ami_copy.py [-h] -a AWS_ACCESS_KEY -s AWS_SECRET_KEY [-r REGION] -i
-                       AMI_ID [-l LOG_LEVEL] [-e]
+                       AMI_ID [-l LOG_LEVEL] [-e] [-S ROOT_VOLUME_SIZE]
 
 Script to copy public AMIs to the own account.
 
@@ -49,6 +49,9 @@ optional arguments:
   -e, --enhanced-networking
                         Specify if you want to have enhanced networking
                         enabled in the resulting image.
+  -S ROOT_VOLUME_SIZE, --root-volume-size ROOT_VOLUME_SIZE
+                        The minimum size the root volume should have in the
+                        resulting AMI.
 ```
 
 # Contribution
