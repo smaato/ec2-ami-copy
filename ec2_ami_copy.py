@@ -53,7 +53,7 @@ def copy_snapshot(connection, source_region, snapshot_id):
     return target_snapshot_id
 
 
-def build_block_device_map(source_image, target_snapshot_id):
+def build_block_device_map(source_image, target_snapshot_id, target_snapshot_size):
     """Creates a block device map which is used for the copied AMI.
 
     The created block device map contains a root volumes with 10GB of storage
@@ -67,7 +67,7 @@ def build_block_device_map(source_image, target_snapshot_id):
 
     block_device_map = BlockDeviceMapping()
     block_device_map[root_device_name] = BlockDeviceType(snapshot_id=target_snapshot_id,
-                                                         size=10,
+                                                         size=target_snapshot_size,
                                                          volume_type='gp2',
                                                          delete_on_termination=del_root_volume)
 
@@ -144,7 +144,9 @@ def main():
     # copy the snapshot representing the root file system of the AMI
     root_device_name = source_image.root_device_name
     source_snapshot_id = source_image.block_device_mapping[root_device_name].snapshot_id
-    target_snapshot_id = copy_snapshot(connection, args.region, source_snapshot_id)
+    target_snapshot_id = copy_snapshot(connection,
+                                       args.region,
+                                       source_snapshot_id)
 
     # overwrite the option for enhanced networking if necessary
     if args.sriov_net_support:
@@ -152,9 +154,22 @@ def main():
     else:
         sriov_net_support = source_image.sriov_net_support
 
-    block_device_map = build_block_device_map(source_image, target_snapshot_id)
+    # ensure the size of the root volume in the target AMI is at least 10GB,
+    # but not smaller than in the origin AMI
+    source_snapshot_size = source_image.block_device_mapping[root_device_name].size
+    if source_snapshot_size > 10:
+        target_snapshot_size = source_snapshot_size
+    else:
+        target_snapshot_size = 10
 
-    target_image_id = create_image(connection, source_image, block_device_map, sriov_net_support)
+    block_device_map = build_block_device_map(source_image,
+                                              target_snapshot_id,
+                                              target_snapshot_size)
+
+    target_image_id = create_image(connection,
+                                   source_image,
+                                   block_device_map,
+                                   sriov_net_support)
 
     logging.info('The new image is available as: %s', target_image_id)
 
