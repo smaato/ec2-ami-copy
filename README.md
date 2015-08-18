@@ -45,13 +45,15 @@ optional arguments:
   -i AMI_ID, --ami-id AMI_ID
                         The ID of the AMI to copy.
   -l LOG_LEVEL, --log-level LOG_LEVEL
-                        Sets the log level of the script. Default is INFO.
+                        Sets the log level of the script. Defaults to INFO.
   -e, --enhanced-networking
-                        Specify if you want to have enhanced networking
-                        enabled in the resulting image.
+                        Specify if you want to enforce enabled enhanced
+                        networking in the resulting image. If not set the
+                        setting for enhanced networking willbe taken from the
+                        original AMI.
   -S ROOT_VOLUME_SIZE, --root-volume-size ROOT_VOLUME_SIZE
-                        The minimum size the root volume should have in the
-                        resulting AMI.
+                        The minimum size in GB the root volume should have in
+                        the resulting AMI. Defaults to 10.
 ```
 
 # Contribution

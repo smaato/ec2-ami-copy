@@ -6,7 +6,7 @@ Allows to enable enhanced networking while copying and sets more convenient
 defaults for the size of the root image and the number of ephemeral volumes.
 
 Author: Daniel Roschka <daniel@smaato.com>
-Copyright: Smaato Inc. 2014
+Copyright: Smaato Inc. 2014-2015
 URL: https://github.com/smaato/ec2-ami-copy
 """
 
@@ -25,7 +25,7 @@ except ImportError:
 
 
 def copy_snapshot(connection, source_region, snapshot_id):
-    """Copies a snapshot. Used to copy the snapshot separately from the AMI."""
+    """Copy a snapshot. Used to copy the snapshot separately from the AMI."""
     try:
         source_snapshot = connection.get_all_snapshots(snapshot_ids=snapshot_id)[0]
     except EC2ResponseError as exc:
@@ -33,9 +33,10 @@ def copy_snapshot(connection, source_region, snapshot_id):
         sys.exit(1)
 
     try:
-        target_snapshot_id = connection.copy_snapshot(source_region=source_region,
-                                 source_snapshot_id=source_snapshot.id,
-                                 description=source_snapshot.description)
+        target_snapshot_id = connection.copy_snapshot(
+            source_region=source_region,
+            source_snapshot_id=source_snapshot.id,
+            description=source_snapshot.description)
     except EC2ResponseError as exc:
         logging.critical('Copying the snapshot of the source AMI failed: %s', exc.error_message)
         sys.exit(1)
@@ -54,7 +55,7 @@ def copy_snapshot(connection, source_region, snapshot_id):
 
 
 def build_block_device_map(source_image, target_snapshot_id, target_snapshot_size):
-    """Creates a block device map which is used for the copied AMI.
+    """Create a block device map which is used for the copied AMI.
 
     The created block device map contains a root volumes with 10GB of storage
     on general purpose SSD (gp2) as well as up to four ephemeral volumes.
@@ -72,23 +73,24 @@ def build_block_device_map(source_image, target_snapshot_id, target_snapshot_siz
                                                          delete_on_termination=del_root_volume)
 
     for i in range(0, 4):
-        device_name = '/dev/sd%s' % chr(98+i)
+        device_name = '/dev/sd%s' % chr(98 + i)
         block_device_map[device_name] = BlockDeviceType(ephemeral_name='ephemeral%i' % i)
 
     return block_device_map
 
 
 def create_image(connection, source_image, block_device_map, sriov_net_support):
-    """Creates a new AMI out of the copied snapshot and the pre-defined block device map."""
+    """Create a new AMI out of the copied snapshot and the pre-defined block device map."""
     try:
-        target_image_id = connection.register_image(name=source_image.name,
-                              architecture=source_image.architecture,
-                              kernel_id=source_image.kernel_id,
-                              ramdisk_id=source_image.ramdisk_id,
-                              root_device_name=source_image.root_device_name,
-                              block_device_map=block_device_map,
-                              virtualization_type=source_image.virtualization_type,
-                              sriov_net_support=sriov_net_support)
+        target_image_id = connection.register_image(
+            name=source_image.name,
+            architecture=source_image.architecture,
+            kernel_id=source_image.kernel_id,
+            ramdisk_id=source_image.ramdisk_id,
+            root_device_name=source_image.root_device_name,
+            block_device_map=block_device_map,
+            virtualization_type=source_image.virtualization_type,
+            sriov_net_support=sriov_net_support)
     except EC2ResponseError as exc:
         logging.critical('The creation of the copied AMI failed: %s', exc.error_message)
         sys.exit(1)
@@ -120,16 +122,17 @@ def main():
     parser.add_argument('-i', '--ami-id', dest='ami_id', required=True,
                         help='The ID of the AMI to copy.')
     parser.add_argument('-l', '--log-level', dest='log_level', default='INFO',
-                        help='Sets the log level of the script. Default is INFO.')
+                        help='Sets the log level of the script. Defaults to INFO.')
     parser.add_argument('-e', '--enhanced-networking', dest='sriov_net_support',
                         action='store_true', default=False,
-                        help='Specify if you want to have enhanced networking enabled in the ' +
-                        'resulting image.')
+                        help='Specify if you want to enforce enabled enhanced networking in the '
+                        'resulting image. If not set the setting for enhanced networking will'
+                        'be taken from the original AMI.')
     parser.add_argument('-S', '--root-volume-size', dest='root_volume_size', type=int, default=10,
-                        help='The minimum size the root volume should have in the resulting AMI.')
+                        help='The minimum size in GB the root volume should have in the '
+                        'resulting AMI. Defaults to 10.')
     args = parser.parse_args()
-    logging.basicConfig(format='%(asctime)s %(levelname)s: ' \
-                                       '%(message)s', level=args.log_level)
+    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=args.log_level)
     logging.getLogger('boto').setLevel(logging.CRITICAL)
 
     connection = connect_to_region(args.region,
