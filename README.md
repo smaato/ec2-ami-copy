@@ -56,6 +56,15 @@ optional arguments:
                         the resulting AMI. Defaults to 10.
 ```
 
+# Docker
+
+If your environment doesn't contain Python (or not ideal for it), you can run the above ec2_ami_copy via Docker:
+
+```
+docker build -t ec2-ami-copy .
+docker run -it --rm --name ec2-ami-copy ec2 -ami-copy python ec2_ami_copy.py -a $access-key -s $secret-key -i $ami-id
+```
+
 # Contribution
 
 Pull Requests are welcome!
