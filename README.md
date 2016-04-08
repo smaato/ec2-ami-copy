@@ -62,7 +62,7 @@ If your environment doesn't contain Python (or not ideal for it), you can run th
 
 ```
 docker build -t ec2-ami-copy .
-docker run -it --rm --name ec2-ami-copy ec2-ami-copy python ec2_ami_copy.py -a $access-key -s $secret-key -i $ami-id
+docker run --rm ec2-ami-copy -a $access-key -s $secret-key -i $ami-id
 ```
 
 # Contribution
